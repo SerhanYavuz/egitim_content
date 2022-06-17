@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+
+  db:
+    container_name: deliveryitems_db
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    networks:
+      - project-network
+ 
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8082:8080
+    networks:
+      - project-network
+
+  vehicle_api:
+    container_name: deliveryitems_api
+    image: deliveryitems_api
+    restart: always
+    environment:
+      - ConnectionString=Server=deliveryitems_db;Port=5432;Database=postgres;User Id=postgres;Password=admin
+      - ASPNETCORE_ENVIRONMENT=Release
+    ports:
+      - 82:80
+    networks:
+      - project-network
+    depends_on:
+      - db
+    command: ["./wait-for-postgres.sh","admin" ,"deliveryItems_db"]
+
+networks:
+  project-network:
+    external: true
+

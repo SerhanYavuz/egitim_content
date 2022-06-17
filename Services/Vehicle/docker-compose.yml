@@ -1,0 +1,45 @@
+version: '3.1'
+
+services:
+
+  db:
+    container_name: vehicle_db
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    networks:
+      - project-network
+
+
+ 
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - project-network
+
+  vehicle_api:
+    container_name: vehicle_api
+    image: vehicle_api
+    restart: always
+    environment:
+      - ConnectionString=Server=vehicle_db;Port=5432;Database=postgres;User Id=postgres;Password=admin
+      - ASPNETCORE_ENVIRONMENT=Release
+    ports:
+      - 80:80
+    networks:
+      - project-network
+    depends_on:
+      - db
+    command: ["./wait-for-postgres.sh","admin" ,"vehicle_db"]
+
+networks:
+  project-network:
+    external: true
+
